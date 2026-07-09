@@ -13,8 +13,10 @@ Route::get('/listing/{slug}', [MarketplaceController::class, 'show'])->name('mar
 // ==================== RUTE PROTEKSI LOGIN (AUTH) ====================
 Route::middleware(['auth'])->group(function () {
 
+    // ROUTE PENGAJUAN REKBER OLEH BUYER
+    Route::post('/escrow/{listing_id}/store', [\App\Http\Controllers\EscrowController::class, 'store'])->name('escrow.store');
+
     // 1. Pengecekan Akses Utama untuk Halaman /dashboard generic
-    // PASTIKAN HANYA ADA SATU RUTE INI, DAN HARUS ADA ->name('dashboard') DI BELAKANGNYA
     Route::get('/dashboard', function () {
         if (auth()->user()->role === \App\Enums\UserRole::ADMIN) {
             return redirect()->route('admin.dashboard');
@@ -48,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
 
     // 3. === GROUP AKSES: ADMIN ===
     Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
+        
         // Dashboard & Moderasi Konten
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
 
@@ -60,6 +63,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/listings/{id}/reject-featured', [AdminDashboard::class, 'rejectFeatured'])->name('listings.reject_featured');
         Route::delete('/listings/{id}/destroy', [AdminDashboard::class, 'destroy'])->name('listings.destroy');
 
+        // Rute Manajemen Rekber (Multi-Step) - Cukup 3 baris ini saja
+        Route::post('/dashboard/escrow/{id}/proses', [AdminDashboard::class, 'prosesEscrow'])->name('escrow.proses');
+        Route::post('/dashboard/escrow/{id}/group-created', [AdminDashboard::class, 'markGroupCreated'])->name('escrow.group_created');
+        Route::post('/dashboard/escrow/{id}/complete', [AdminDashboard::class, 'completeEscrow'])->name('escrow.complete');
+
         // Sinkronisasi History
         Route::get('/history', [AdminDashboard::class, 'adminHistory'])->name('history');
     });
@@ -67,7 +75,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ==================== ROUTE AUTENTIKASI (LOGIN / REGISTER) ====================
-// Kode otomatis untuk mendeteksi sistem Auth yang kamu gunakan (Breeze / Laravel UI)
 if (file_exists(base_path('routes/auth.php'))) {
     require __DIR__.'/auth.php';
 } else {

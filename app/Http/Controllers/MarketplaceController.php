@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Listing;
-use App\Enums\ListingStatus; // <-- Tambahkan Enum Listing
-use App\Enums\UserRole; // <-- Tambahkan Enum Role untuk cek Admin
+use App\Enums\ListingStatus;
+use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,7 +12,7 @@ class MarketplaceController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. PERBAIKAN: Gunakan Enum ACTIVE, bukan teks 'Aktif'
+        // 1. Ambil semua iklan yang statusnya ACTIVE
         $query = Listing::where('status', ListingStatus::ACTIVE);
 
         // Fitur Pencarian Dinamis (Berdasarkan Judul atau List Item Koleksi)
@@ -63,11 +63,10 @@ class MarketplaceController extends Controller
 
     public function show($slug)
     {
-        // 2. PERBAIKAN: Hapus filter status di sini agar Admin tetap bisa menarik data iklan yang Pending
+        // 1. Ambil data iklan
         $listing = Listing::where('slug', $slug)->firstOrFail();
 
-        // 3. JALUR VIP: Jika iklan belum Aktif, pastikan HANYA Admin atau Pemilik Iklan yang boleh melihatnya.
-        // Jika pembeli biasa/tamu yang mencoba melihat URL ini, mereka akan diblokir (404)
+        // 2. JALUR VIP: Jika iklan belum Aktif, pastikan HANYA Admin atau Pemilik Iklan yang boleh melihatnya.
         if ($listing->status !== ListingStatus::ACTIVE) {
             $isAdmin = Auth::check() && Auth::user()->role === UserRole::ADMIN;
             $isOwner = Auth::check() && Auth::id() === $listing->user_id;
@@ -77,12 +76,15 @@ class MarketplaceController extends Controller
             }
         }
 
-        // Increment View Counter Otomatis Saat Detail Iklan Dibuka
-        // (Kita tidak hitung view jika yang melihat adalah Admin/Pemilik agar statistik tidak bocor)
+        // 3. Increment View Counter Otomatis Saat Detail Iklan Dibuka
         if (!Auth::check() || (Auth::id() !== $listing->user_id && Auth::user()->role !== UserRole::ADMIN)) {
             $listing->increment('view_count');
         }
 
-        return view('marketplace.show', compact('listing'));
+        // 4. Ambil data fee rekber, kalau kosong defaultnya 3
+        $rekberFee = \App\Models\Setting::where('key', 'rekber_fee_percent')->value('value') ?? 3;
+
+        // 5. Lempar HANYA 1 KALI ke tampilan view
+        return view('marketplace.show', compact('listing', 'rekberFee'));
     }
 }

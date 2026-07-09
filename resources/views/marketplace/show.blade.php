@@ -4,6 +4,14 @@
 
 @section('content')
 <div class="container">
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show border-success bg-dark text-white mb-4 shadow" role="alert">
+            <i class="bi bi-check-circle-fill text-success me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-md-7 mb-4">
             <div class="card card-gaming border-0 mb-4">
@@ -47,20 +55,39 @@
         </div>
 
         <div class="col-md-5">
+            
             <div class="card border-gold bg-dark-card shadow mb-4 text-center rounded-4" style="background: linear-gradient(145deg, #1e1e1e, #2a2205);">
                 <div class="card-body p-4">
                     <h5 class="fw-bold text-white mb-2">Tertarik dengan Akun Ini?</h5>
-                    <p class="small text-muted mb-3">
-                        Transaksi langsung via WhatsApp dengan penjual. Harap selalu gunakan jasa Rekber pihak ketiga yang terpercaya!
+                    <p class="small text-muted mb-4">
+                        Pilih metode transaksi di bawah ini. Sangat disarankan menggunakan Rekber resmi agar terhindar dari penipuan.
                     </p>
-                    <button type="button" class="btn btn-outline-warning btn-sm fw-bold mb-4 px-3 rounded-pill" data-bs-toggle="modal" data-bs-target="#rekberModal">
-                        <i class="bi bi-shield-check me-1"></i> Pelajari Rekber
-                    </button>
                     
                     <a href="https://wa.me/{{ $listing->whatsapp }}?text=Halo,%20saya%20tertarik%20dengan%20iklan%20akun%20CODM%20Anda:%20{{ urlencode($listing->title) }}" 
-                       target="_blank" class="btn btn-gold btn-lg w-100 fw-bold shadow">
-                        <i class="bi bi-whatsapp me-2"></i> Chat Penjual
+                       target="_blank" class="btn btn-gold btn-lg w-100 fw-bold shadow mb-3">
+                        <i class="bi bi-whatsapp me-2"></i> Chat Penjual Langsung
                     </a>
+
+                    <div class="position-relative mb-3">
+                        <hr class="border-secondary">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-dark px-2 small text-muted">ATAU</span>
+                    </div>
+
+                    @auth
+                        @if(auth()->id() !== $listing->user_id)
+                            <button type="button" class="btn btn-outline-warning btn-lg w-100 fw-bold shadow rounded-pill" data-bs-toggle="modal" data-bs-target="#modalRekber">
+                                <i class="bi bi-shield-check me-2"></i> Gunakan Rekber Resmi
+                            </button>
+                        @else
+                            <button class="btn btn-secondary btn-lg w-100 fw-bold shadow rounded-pill" disabled>
+                                <i class="bi bi-lock me-2"></i> Ini Iklan Milik Anda
+                            </button>
+                        @endif
+                    @else
+                        <a href="{{ route('login') }}" class="btn btn-outline-warning btn-lg w-100 fw-bold shadow rounded-pill">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Login untuk via Rekber
+                        </a>
+                    @endauth
                 </div>
             </div>
 
@@ -129,9 +156,66 @@
                     @endif
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="modalRekber" tabindex="-1" aria-labelledby="modalRekberLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-white" style="background-color: #1a1a24; border: 1px solid #f3af22;">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title fw-bold" style="color: #f3af22;" id="modalRekberLabel">
+                    <i class="bi bi-shield-lock-fill me-2"></i>Pengajuan Rekber Resmi
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form action="{{ route('escrow.store', $listing->id) }}" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    
+                    <div class="bg-black p-3 rounded mb-4 border border-secondary shadow-sm">
+                        <h6 class="text-muted small mb-3 fw-bold">Rincian Pembayaran</h6>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span>Harga Akun</span>
+                            <span>Rp {{ number_format($listing->price, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span>Biaya Jasa Rekber ({{ $rekberFee ?? 3 }}%)</span>
+                            <span class="text-warning">+ Rp {{ number_format(($listing->price * ($rekberFee ?? 3)) / 100, 0, ',', '.') }}</span>
+                        </div>
+                        <hr class="border-secondary">
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total Dibayar</span>
+                            <span class="text-success fs-5">Rp {{ number_format($listing->price + (($listing->price * ($rekberFee ?? 3)) / 100), 0, ',', '.') }}</span>
+                        </div>
+                    </div>
 
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Nomor WhatsApp Anda <span class="text-danger">*</span></label>
+                        <input type="text" name="buyer_wa" class="form-control bg-dark text-white border-secondary" placeholder="Cth: 081234567890" required>
+                        <small class="text-muted" style="font-size: 11px;"><i class="bi bi-info-circle text-info"></i> Admin akan memasukkan nomor ini ke Grup WhatsApp Transaksi bersama Penjual.</small>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">Catatan Tambahan (Opsional)</label>
+                        <textarea name="notes" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Cth: Tolong proses agak cepat min..."></textarea>
+                    </div>
+                    
+                    <div class="form-check small text-muted">
+                        <input class="form-check-input bg-dark border-secondary" type="checkbox" required id="accRekber">
+                        <label class="form-check-label" for="accRekber">
+                            Saya setuju dengan syarat ketentuan Rekber & siap melakukan pembayaran ke rekening Admin.
+                        </label>
+                    </div>
+
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning fw-bold text-dark px-4 shadow rounded-pill">Ajukan Rekber</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection

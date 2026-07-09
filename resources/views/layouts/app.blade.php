@@ -216,6 +216,17 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #ffc107;
         }
+        
+        /* Animasi Nadi (Pulse) untuk icon notifikasi */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+        .bi-pulse {
+            animation: pulse-ring 2s infinite;
+            display: inline-block;
+        }
     </style>
 </head>
 <body style="
@@ -278,6 +289,34 @@
         </div>
     </nav>
 
+    @auth
+        @php
+            // Cek apakah user login punya transaksi rekber yang sedang jalan (sebagai pembeli ATAU penjual)
+            $notifEscrows = \App\Models\Escrow::with('listing')
+                ->where(function($q) {
+                    $q->where('buyer_id', auth()->id())
+                      ->orWhere('seller_id', auth()->id());
+                })
+                ->whereIn('status', ['diproses', 'group_dibuat'])
+                ->get();
+        @endphp
+
+        @foreach($notifEscrows as $notif)
+            <div class="alert alert-warning alert-dismissible fade show rounded-0 mb-0 border-0 border-bottom border-warning text-center shadow-sm" style="background-color: #2a2205; color: #f3af22;" role="alert">
+                <i class="bi bi-bell-fill me-2 bi-pulse text-warning"></i>
+                
+                @if($notif->status == 'diproses')
+                    Transaksi rekber <strong>{{ Str::limit($notif->listing->title, 25) }}</strong> sedang disiapkan oleh Admin! 
+                    Mohon tunggu, Admin sedang mengecek data dan akan segera membuat Grup WhatsApp.
+                @elseif($notif->status == 'group_dibuat')
+                    Grup WhatsApp untuk transaksi <strong>{{ Str::limit($notif->listing->title, 25) }}</strong> telah dibuat oleh Admin! 
+                    <span class="text-white text-decoration-underline ms-1">Silakan cek aplikasi WhatsApp Anda sekarang.</span>
+                @endif
+                
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.7rem; padding-top: 1rem;"></button>
+            </div>
+        @endforeach
+    @endauth
     <main class="py-5">
         @yield('content')
     </main>

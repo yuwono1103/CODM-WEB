@@ -1,5 +1,0 @@
-services:
-  - type: web
-    name: codm-web
-    runtime: docker
-    plan: free

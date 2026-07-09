@@ -5,32 +5,38 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Listing;
 use App\Models\User;
-use App\Enums\ListingStatus; // Memanggil aturan status
+use App\Enums\ListingStatus; 
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {   
     public function index()
     {
-        // Ambil statistik
+        // 1. Ambil statistik
         $totalUsers = User::count();
         $totalIklan = Listing::count();
         $totalAktif = Listing::where('status', ListingStatus::ACTIVE)->count();
 
-        // Ambil antrean iklan yang berstatus PENDING (Iklan Baru)
+        // 2. Ambil antrean iklan yang berstatus PENDING (Iklan Baru)
         $pendingListings = Listing::where('status', ListingStatus::PENDING)
                                   ->with('user')
                                   ->latest()
                                   ->get();
 
-        // ALUR BARU FEATURED: Ambil antrean pengajuan Premium yang sedang pending
+        // 3. Ambil antrean pengajuan Premium yang sedang pending
         $pendingFeatured = Listing::where('featured_status', 'pending')
                                   ->with('user')
                                   ->latest()
                                   ->get();
 
-        // Jangan lupa kirim $pendingFeatured ke view
-        return view('admin.dashboard', compact('totalUsers', 'totalIklan', 'totalAktif', 'pendingListings', 'pendingFeatured'));
+        // 4. PERUBAHAN: Ambil semua transaksi Rekber yang BELUM selesai
+        $activeEscrows = \App\Models\Escrow::with(['buyer', 'listing.user'])
+                        ->whereIn('status', ['menunggu_admin', 'diproses', 'group_dibuat'])
+                        ->latest()
+                        ->get();
+
+        // 5. GABUNGKAN SEMUA VARIABEL DI SATU RETURN SAJA (Ubah ke $activeEscrows)
+        return view('admin.dashboard', compact('totalUsers', 'totalIklan', 'totalAktif', 'pendingListings', 'pendingFeatured', 'activeEscrows'));
     }
 
     public function allListings(Request $request)
@@ -150,5 +156,33 @@ class DashboardController extends Controller
         ]);
         
         return back()->with('success', 'Pengajuan Premium berhasil ditolak.');
+    }
+
+    // ========================================================
+    // ALUR TRANSAKSI REKBER (ESCROW) MULTI-STEP
+    // ========================================================
+
+    public function prosesEscrow($id)
+    {
+        $escrow = \App\Models\Escrow::findOrFail($id);
+        $escrow->update(['status' => 'diproses']);
+        
+        return back()->with('success', 'Status: SEDANG DIPROSES. Silakan buat Grup WA sekarang.');
+    }
+
+    public function markGroupCreated($id)
+    {
+        $escrow = \App\Models\Escrow::findOrFail($id);
+        $escrow->update(['status' => 'group_dibuat']);
+        
+        return back()->with('success', 'Status: GRUP WA DIBUAT. Buyer & Seller telah mendapat notifikasi.');
+    }
+
+    public function completeEscrow($id)
+    {
+        $escrow = \App\Models\Escrow::findOrFail($id);
+        $escrow->update(['status' => 'selesai']);
+        
+        return back()->with('success', 'Transaksi SELESAI. Data telah dipindahkan ke riwayat.');
     }
 }
