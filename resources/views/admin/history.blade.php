@@ -1,11 +1,11 @@
-@extends('layouts.app') {{-- Atau sesuaikan dengan layout induk yang kamu pakai di dashboard --}}
+@extends('layouts.app') {{-- Menyesuaikan layout utama proyekmu --}}
 
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark">Riwayat Moderasi Iklan</h2>
-            <p class="text-muted small mb-0">Daftar seluruh iklan yang telah disetujui atau ditolak oleh sistem.</p>
+            <p class="text-muted small mb-0">Daftar seluruh iklan (Listing) yang telah diproses (Disetujui atau Ditolak) oleh Admin.</p>
         </div>
         <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">
             Kembali ke Dashboard
@@ -14,7 +14,7 @@
 
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white fw-bold">
-            Arsip Tindakan Moderasi
+            Arsip Moderasi Iklan Penjualan
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -23,30 +23,36 @@
                         <tr>
                             <th>Penjual</th>
                             <th>Judul Akun</th>
-                            <th>Harga</th>
-                            <th>Tanggal Diproses</th>
-                            <th>Status Akhir</th>
+                            <th>Harga Akun</th>
+                            <th>Tanggal Proses</th>
+                            <th class="text-center">Status Moderasi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($listings as $listing)
+                        @forelse($listings as $item)
                             <tr>
-                                <td class="fw-bold">{{ $listing->user->username ?? 'Unknown' }}</td>
-                                <td>{{ $listing->title }}</td>
-                                <td>Rp {{ number_format($listing->price, 0, ',', '.') }}</td>
-                                <td class="text-muted small">{{ $listing->updated_at->format('d M Y H:i') }}</td>
-                                <td>
-                                    @if($listing->status->value === \App\Enums\ListingStatus::ACTIVE->value)
-                                        <span class="badge bg-success px-3 py-2">Disetujui</span>
+                                <td class="fw-bold text-secondary">
+                                    {{ $item->user->name ?? 'User Terhapus' }}
+                                </td>
+                                <td>{{ $item->title }}</td>
+                                <td class="fw-bold text-success">
+                                    Rp {{ number_format($item->price, 0, ',', '.') }}
+                                </td>
+                                <td class="text-muted small">
+                                    {{ $item->updated_at->format('d M Y H:i') }}
+                                </td>
+                                <td class="text-center">
+                                    @if($item->status->value === 'active')
+                                        <span class="badge bg-success px-3 py-2 text-uppercase" style="font-size: 0.75rem;">Disetujui</span>
                                     @else
-                                        <span class="badge bg-danger px-3 py-2">Ditolak</span>
+                                        <span class="badge bg-danger px-3 py-2 text-uppercase" style="font-size: 0.75rem;">Ditolak</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center py-5 text-muted">
-                                    Belum ada riwayat tindakan moderasi iklan.
+                                    Belum ada riwayat moderasi iklan yang diproses.
                                 </td>
                             </tr>
                         @endforelse
@@ -56,6 +62,7 @@
         </div>
     </div>
 
+    {{-- Navigasi Halaman / Pagination --}}
     <div class="mt-4 d-flex justify-content-center">
         {{ $listings->links() }}
     </div>

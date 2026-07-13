@@ -3,6 +3,75 @@
 @section('title', 'Dashboard Penjual')
 
 @section('content')
+<style>
+    /* Styling khusus untuk Timeline Vertical (Opsional jika masih dipakai) */
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+        margin-bottom: 0;
+        list-style: none;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0.75rem;
+        width: 2px;
+        background-color: #333;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+    .timeline-icon {
+        position: absolute;
+        left: -2.45rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        color: #fff;
+        z-index: 1;
+    }
+    /* Warna Status Disesuaikan Tema Gold */
+    .bg-done { background-color: #198754; } /* Hijau Success */
+    .bg-active { background-color: #f3af22; box-shadow: 0 0 10px rgba(243, 175, 34, 0.5); color: #000 !important; font-weight: bold;} /* Gold menyala */
+    .bg-pending { background-color: #444; } /* Abu-abu */
+
+    /* ==================================================== */
+    /* STYLING BARU UNTUK TABEL MONITORING REKBER SELLER */
+    /* ==================================================== */
+    .table-gaming-dark {
+        background-color: rgba(30, 32, 45, 0.6) !important;
+        border: 1px solid rgba(243, 175, 34, 0.15);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .table-gaming-dark th {
+        background-color: #111 !important;
+        color: #f3af22 !important;
+        border-bottom: 2px solid rgba(243, 175, 34, 0.3) !important;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    .table-gaming-dark td {
+        background-color: rgba(30, 32, 45, 0.95) !important;
+        color: #fff !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+    .table-gaming-dark tr:hover td {
+        background-color: rgba(40, 43, 60, 0.95) !important;
+    }
+</style>
+
 <div class="container py-2">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
@@ -68,6 +137,82 @@
         </div>
     </div>
 
+    <div class="mb-5">
+        <h5 class="fw-bold text-white mb-3">
+            <i class="bi bi-shield-check text-gold me-2"></i> Monitoring Progres Rekber
+        </h5>
+        <div class="table-responsive table-gaming-dark shadow-lg">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Judul Akun</th>
+                        <th>Buyer</th>
+                        <th>WhatsApp Buyer</th>
+                        <th>Total Pembayaran</th>
+                        <th>Fee Rekber</th>
+                        <th class="text-center pe-4">Status Transaksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($escrowTransactions as $escrow)
+                        <tr>
+                            <td class="ps-4 fw-bold text-white">
+                                <span class="text-muted small d-block font-monospace">#{{ $escrow->transaction_code ?? $escrow->id }}</span>
+                                {{ $escrow->listing->title ?? 'Akun Terhapus' }}
+                            </td>
+                            
+                            <td class="text-light">{{ $escrow->buyer->name ?? 'Unknown Buyer' }}</td>
+                            
+                            <td>
+                                @if($escrow->buyer_wa)
+                                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $escrow->buyer_wa) }}" target="_blank" class="text-decoration-none text-success fw-bold small">
+                                        <i class="bi bi-whatsapp me-1"></i> {{ $escrow->buyer_wa }}
+                                    </a>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
+                            
+                            <td class="fw-bold text-gold">
+                                Rp {{ number_format($escrow->total_amount ?? 0, 0, ',', '.') }}
+                            </td>
+                            
+                            <td class="text-muted small">
+                                Rp {{ number_format($escrow->fee_amount ?? 0, 0, ',', '.') }}
+                            </td>
+                            
+                            <td class="text-center pe-4">
+                                @php 
+                                    $statusVal = is_object($escrow->status) ? $escrow->status->value : $escrow->status;
+                                @endphp
+
+                                @if(in_array($statusVal, ['menunggu_admin', 'pending']))
+                                    <span class="badge bg-warning text-dark px-3 py-2 text-uppercase font-monospace" style="font-size: 0.7rem; letter-spacing: 0.5px;">Menunggu Admin</span>
+                                @elseif($statusVal === 'diproses')
+                                    <span class="badge bg-info text-dark px-3 py-2 text-uppercase font-monospace" style="font-size: 0.7rem; letter-spacing: 0.5px;">Sedang Diproses</span>
+                                @elseif(in_array($statusVal, ['grup_wa', 'group_created', 'wa_dibuat']))
+                                    <span class="badge bg-primary px-3 py-2 text-uppercase font-monospace" style="font-size: 0.7rem; letter-spacing: 0.5px;">Grup WA Dibuat</span>
+                                @elseif(in_array($statusVal, ['transaksi_berlangsung', 'berlangsung']))
+                                    <span class="badge bg-secondary border border-light px-3 py-2 text-uppercase font-monospace" style="font-size: 0.7rem; letter-spacing: 0.5px;">Transaksi Berlangsung</span>
+                                @elseif(in_array($statusVal, ['selesai', 'completed']))
+                                    <span class="badge bg-success px-3 py-2 text-uppercase font-monospace" style="font-size: 0.7rem; letter-spacing: 0.5px;"><i class="bi bi-check2-circle me-1"></i> Selesai</span>
+                                @else
+                                    <span class="badge bg-dark border border-secondary text-muted px-3 py-2 text-uppercase font-monospace" style="font-size: 0.7rem; letter-spacing: 0.5px;">{{ $statusVal }}</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted small">
+                                <i class="bi bi-shield-slash d-block fs-2 mb-2 text-secondary"></i>
+                                Belum ada riwayat transaksi Rekber (Escrow) untuk data penjualan Anda.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="card card-gaming border-0 overflow-hidden">
@@ -133,10 +278,9 @@
                                             @php
                                                 $sisaHari = 0;
                                                 $tipeMasaAktif = '';
-            
+                            
                                                 // 1. Cek Apakah Premium Aktif
                                                 if ($listing->featured_until && \Carbon\Carbon::parse($listing->featured_until)->isFuture() && $listing->featured_status === 'approved') {
-                                                    // Gunakan ceil() dan floatDiffInDays agar dibulatkan ke atas menjadi angka utuh (integer)
                                                     $sisaHari = (int) ceil(now()->floatDiffInDays(\Carbon\Carbon::parse($listing->featured_until)));
                                                     $tipeMasaAktif = 'Premium';
                                                 } 
@@ -146,7 +290,7 @@
                                                     $tipeMasaAktif = 'Reguler';
                                                 }
                                             @endphp
-            
+                            
                                             @if($sisaHari > 0)
                                                 <span class="text-white small fw-bold">
                                                     <i class="bi bi-clock-history me-1 {{ $tipeMasaAktif === 'Premium' ? 'text-warning' : 'text-muted' }}"></i> 
@@ -242,7 +386,8 @@
 </div>
 
 <div class="modal fade" id="featuredModal" tabindex="-1" aria-labelledby="featuredModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content bg-dark-card border-gold text-white" style="background-color: #1a1a24; border: 1px solid #f3af22;">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> 
+        <div class="modal-content bg-dark-card border-gold text-white" style="background-color: #1a1a24; border: 1px solid #f3af22;">
             <div class="modal-header border-bottom border-dark">
                 <h5 class="modal-title fw-bold" style="color: #f3af22;" id="featuredModalLabel">
                     <i class="bi bi-star-fill me-2"></i> Upgrade Ke Featured Premium

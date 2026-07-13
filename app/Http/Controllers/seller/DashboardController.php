@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Seller;
 
+use App\Http\Controllers\Controller; // <-- Tambahkan ini agar class bisa extend Controller
 use App\Models\Listing;
-use App\Models\User;
-use App\Enums\ListingStatus; // <-- Tambahkan import Enum ini
+use App\Models\Escrow; // <-- Tambahkan import Model Escrow/Rekber kamu di sini
+use App\Enums\ListingStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class DashboardController
+class DashboardController extends Controller // <-- Pastikan ada 'extends Controller'
 {
     public function index()
     {
@@ -33,6 +34,18 @@ class DashboardController
             ->take(3)
             ->get();
 
-        return view('seller.dashboard', compact('allListings', 'stats', 'topListings'));
+        // ======================================================================
+        // 3. MONITORING STATUS REKBER (ESCROW) UNTUK SELLER
+        // ======================================================================
+        // Mengambil semua transaksi Rekber (baik yang aktif maupun selesai) yang berkaitan dengan akun milik Seller ini
+        $escrowTransactions = Escrow::with(['listing', 'buyer'])
+            ->whereHas('listing', function ($query) use ($userId) {
+                $query->where('user_id', $userId); // Memastikan listing adalah milik seller ini
+            })
+            ->latest()
+            ->get();
+
+        // Kirim semua variabel ke view, termasuk 'escrowTransactions'
+        return view('seller.dashboard', compact('allListings', 'stats', 'topListings', 'escrowTransactions'));
     }
 }

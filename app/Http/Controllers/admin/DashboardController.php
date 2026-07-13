@@ -29,13 +29,13 @@ class DashboardController extends Controller
                                   ->latest()
                                   ->get();
 
-        // 4. PERUBAHAN: Ambil semua transaksi Rekber yang BELUM selesai
+        // 4. PERUBAHAN: Ambil semua transaksi Rekber yang BELUM selesai (Updated ke transaksi_berlangsung)
         $activeEscrows = \App\Models\Escrow::with(['buyer', 'listing.user'])
-                        ->whereIn('status', ['menunggu_admin', 'diproses', 'group_dibuat'])
+                        ->whereIn('status', ['menunggu_admin', 'diproses', 'transaksi_berlangsung'])
                         ->latest()
                         ->get();
 
-        // 5. GABUNGKAN SEMUA VARIABEL DI SATU RETURN SAJA (Ubah ke $activeEscrows)
+        // 5. GABUNGKAN SEMUA VARIABEL DI SATU RETURN SAJA
         return view('admin.dashboard', compact('totalUsers', 'totalIklan', 'totalAktif', 'pendingListings', 'pendingFeatured', 'activeEscrows'));
     }
 
@@ -173,15 +173,22 @@ class DashboardController extends Controller
     public function markGroupCreated($id)
     {
         $escrow = \App\Models\Escrow::findOrFail($id);
-        $escrow->update(['status' => 'group_dibuat']);
         
-        return back()->with('success', 'Status: GRUP WA DIBUAT. Buyer & Seller telah mendapat notifikasi.');
+        // UPDATE: Ubah status dari group_dibuat menjadi transaksi_berlangsung
+        $escrow->update(['status' => 'transaksi_berlangsung']);
+        
+        return back()->with('success', 'Status: TRANSAKSI BERLANGSUNG. Buyer & Seller telah mendapat notifikasi.');
     }
 
     public function completeEscrow($id)
     {
         $escrow = \App\Models\Escrow::findOrFail($id);
-        $escrow->update(['status' => 'selesai']);
+        
+        // UPDATE BARU: status diubah jadi 'selesai' DAN mencatat waktu selesainya ('completed_at')
+        $escrow->update([
+            'status' => 'selesai',
+            'completed_at' => now()
+        ]);
         
         return back()->with('success', 'Transaksi SELESAI. Data telah dipindahkan ke riwayat.');
     }
