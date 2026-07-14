@@ -46,34 +46,28 @@ class MarketplaceController extends Controller
             return $q->where('legendary_weapon_count', '>', 0);
         });
 
-        // 2. JALUR AMAN SQLITE: Menggunakan array pencarian eksplisit (Case-Insensitive di SQLite)
-        // Ini menjamin "akun gila sniper" berlabel 'Featured Premium' atau 'Premium' pasti ditarik keluar.
+        // 2. JALUR BARU: Mengambil Featured berdasarkan sistem terbaru & toleransi data lama localhost
+        $now = now()->toDateTimeString();
         $featuredListings = Listing::where('status', ListingStatus::ACTIVE)
-            ->whereIn('ad_type', [
-                'Featured', 'featured', 
-                'Premium', 'premium', 
-                'Featured Premium', 'featured_premium', 'featured premium'
-            ])
+            ->where(function($q) use ($now) {
+                $q->where(function($sub) use ($now) {
+                    // Sistem Baru: Status approved dan belum kadaluarsa
+                    $sub->where('featured_status', 'approved')
+                        ->where('featured_until', '>=', $now);
+                })
+                // Fallback Sistem Lama (Agar di localhost kamu tetap muncul jika di-set manual)
+                ->orWhereIn('ad_type', ['Featured', 'featured', 'Premium', 'premium', 'Featured Premium']);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
         // 3. Pengurutan (Sorting) Katalog Utama
-        // Menuliskan variasi string secara eksplisit pada CASE statement 
-        // agar tidak bergantung pada fungsi LOWER() database yang rawan tidak didukung SQLite Linux.
+        // Menempatkan iklan yang berstatus Featured Aktif atau tipe Premium di urutan paling atas (1)
         $listings = $query->orderByRaw("
-            CASE ad_type 
-                WHEN 'Featured' THEN 1 
-                WHEN 'featured' THEN 1 
-                WHEN 'Featured Premium' THEN 1 
-                WHEN 'featured_premium' THEN 1 
-                WHEN 'featured premium' THEN 1 
-                WHEN 'Premium' THEN 2 
-                WHEN 'premium' THEN 2 
-                WHEN 'Gratis' THEN 3 
-                WHEN 'gratis' THEN 3 
-                WHEN 'Reguler' THEN 3 
-                WHEN 'reguler' THEN 3 
-                ELSE 4 
+            CASE 
+                WHEN featured_status = 'approved' AND featured_until >= '{$now}' THEN 1
+                WHEN ad_type IN ('Featured', 'featured', 'Premium', 'premium', 'Featured Premium') THEN 1
+                ELSE 2 
             END
         ")
         ->orderBy('created_at', 'desc')
