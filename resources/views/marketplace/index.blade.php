@@ -60,16 +60,16 @@
                                     <h6 class="text-muted small fw-bold mb-3 text-uppercase">Preview In-Game</h6>
                                     <div class="row g-2 h-100 pb-4">
                                         <div class="col-6">
-                                            <img src="{{ asset('storage/'.($listing->lobby_image ?? $listing->thumbnail)) }}" class="w-100 rounded-2 border border-secondary object-fit-cover steam-preview-img" alt="Lobby">
+                                            <img src="{{ asset('storage/'.($listing->lobby_image ?? $listing->thumbnail)) }}" class="w-100 rounded-2 border border-secondary object-fit-cover steam-preview-img" alt="Lobby" style="height: 180px;">
                                         </div>
                                         <div class="col-6">
-                                            <img src="{{ asset('storage/'.($listing->weapon_image ?? $listing->thumbnail)) }}" class="w-100 rounded-2 border border-secondary object-fit-cover steam-preview-img" alt="Weapon">
+                                            <img src="{{ asset('storage/'.($listing->weapon_image ?? $listing->thumbnail)) }}" class="w-100 rounded-2 border border-secondary object-fit-cover steam-preview-img" alt="Weapon" style="height: 180px;">
                                         </div>
                                         <div class="col-6">
-                                            <img src="{{ asset('storage/'.($listing->character_image ?? $listing->thumbnail)) }}" class="w-100 rounded-2 border border-secondary object-fit-cover steam-preview-img" alt="Character">
+                                            <img src="{{ asset('storage/'.($listing->character_image ?? $listing->thumbnail)) }}" class="w-100 rounded-2 border border-secondary object-fit-cover steam-preview-img" alt="Character" style="height: 180px;">
                                         </div>
                                         <div class="col-6">
-                                            <img src="{{ asset('storage/'.($listing->vehicle_image ?? $listing->thumbnail)) }}" class="w-100 rounded-2 border border-secondary object-fit-cover steam-preview-img" alt="Vehicle">
+                                            <img src="{{ asset('storage/'.($listing->vehicle_image ?? $listing->thumbnail)) }}" class="w-100 rounded-2 border border-secondary object-fit-cover steam-preview-img" alt="Vehicle" style="height: 180px;">
                                         </div>
                                     </div>
                                 </div>
@@ -158,12 +158,24 @@
                         <div class="mb-4">
                             <label class="form-label text-muted small fw-bold">Koleksi Minimum</label>
                             <div class="row g-2">
-                                <div class="col-6"><input type="number" name="min_mythic_wp" class="form-control form-control-dark form-control-sm" placeholder="Mythic Wp" title="Minimum Mythic Weapon"></div>
-                                <div class="col-6"><input type="number" name="min_legend_wp" class="form-control form-control-dark form-control-sm" placeholder="Legend Wp" title="Minimum Legendary Weapon"></div>
-                                <div class="col-6"><input type="number" name="min_prestige" class="form-control form-control-dark form-control-sm" placeholder="Prestige" title="Minimum Prestige Weapon"></div>
-                                <div class="col-6"><input type="number" name="min_mythic_ch" class="form-control form-control-dark form-control-sm" placeholder="Mythic Ch" title="Minimum Mythic Character"></div>
-                                <div class="col-6"><input type="number" name="min_legend_ch" class="form-control form-control-dark form-control-sm" placeholder="Legend Ch" title="Minimum Legendary Character"></div>
-                                <div class="col-6"><input type="number" name="min_vehicle" class="form-control form-control-dark form-control-sm" placeholder="Vehicle" title="Minimum Legendary Vehicle"></div>
+                                <div class="col-6">
+                                    <input type="number" name="min_mythic_wp" class="form-control form-control-dark form-control-sm" placeholder="Mythic Wp" title="Minimum Mythic Weapon" value="{{ request('min_mythic_wp') }}">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="min_legend_wp" class="form-control form-control-dark form-control-sm" placeholder="Legend Wp" title="Minimum Legendary Weapon" value="{{ request('min_legend_wp') }}">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="min_prestige" class="form-control form-control-dark form-control-sm" placeholder="Prestige" title="Minimum Prestige Weapon" value="{{ request('min_prestige') }}">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="min_mythic_ch" class="form-control form-control-dark form-control-sm" placeholder="Mythic Ch" title="Minimum Mythic Character" value="{{ request('min_mythic_ch') }}">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="min_legend_ch" class="form-control form-control-dark form-control-sm" placeholder="Legend Ch" title="Minimum Legendary Character" value="{{ request('min_legend_ch') }}">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="min_vehicle" class="form-control form-control-dark form-control-sm" placeholder="Vehicle" title="Minimum Legendary Vehicle" value="{{ request('min_vehicle') }}">
+                                </div>
                             </div>
                         </div>
 

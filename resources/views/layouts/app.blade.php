@@ -265,7 +265,6 @@
                                     <li><a class="dropdown-item py-2" href="{{ route('seller.dashboard') }}"><i class="bi bi-speedometer2 me-2 text-gold"></i> Dashboard Seller</a></li>
                                 @endif
                                 
-                                <li><a class="dropdown-item py-2" href="{{ route('seller.profile.edit') }}"><i class="bi bi-gear me-2 text-gold"></i> Pengaturan</a></li>
                                 <li><hr class="dropdown-divider border-secondary"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">

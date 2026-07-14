@@ -46,19 +46,30 @@ class MarketplaceController extends Controller
             return $q->where('legendary_weapon_count', '>', 0);
         });
 
-        // Pengurutan (Sorting)
+        // 2. JALUR AMAN: Ambil data khusus untuk section "AKUN LAGI BU" (Featured/Premium)
+        // Dipisah agar tidak bentrok dengan pagination katalog bawah
+        $featuredListings = Listing::where('status', ListingStatus::ACTIVE)
+            ->whereIn('ad_type', ['Featured', 'Premium', 'Featured Premium'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 3. Pengurutan (Sorting) Katalog Utama
+        // Sudah ditambahkan 'Featured Premium' dan 'Reguler' agar bobot urutan presisi
         $listings = $query->orderByRaw("
             CASE ad_type 
                 WHEN 'Featured' THEN 1 
+                WHEN 'Featured Premium' THEN 1 
                 WHEN 'Premium' THEN 2 
                 WHEN 'Gratis' THEN 3 
+                WHEN 'Reguler' THEN 3 
                 ELSE 4 
             END
         ")
         ->orderBy('created_at', 'desc')
         ->paginate(12);
 
-        return view('marketplace.index', compact('listings'));
+        // Mengirimkan kedua variabel ke view utama
+        return view('marketplace.index', compact('listings', 'featuredListings'));
     }
 
     public function show($slug)
