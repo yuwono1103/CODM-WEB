@@ -46,28 +46,32 @@ class MarketplaceController extends Controller
             return $q->where('legendary_weapon_count', '>', 0);
         });
 
-        // 2. JALUR AMAN: Mengakomodasi case-sensitive PostgreSQL 
-        // Mencari variasi penulisan 'Featured Premium', 'featured_premium', dsb.
+        // 2. JALUR AMAN SQLITE: Menggunakan array pencarian eksplisit (Case-Insensitive di SQLite)
+        // Ini menjamin "akun gila sniper" berlabel 'Featured Premium' atau 'Premium' pasti ditarik keluar.
         $featuredListings = Listing::where('status', ListingStatus::ACTIVE)
-            ->where(function($q) {
-                $q->whereIn('ad_type', [
-                    'Featured', 'featured', 
-                    'Premium', 'premium', 
-                    'Featured Premium', 'featured_premium', 'featured premium'
-                ]);
-            })
+            ->whereIn('ad_type', [
+                'Featured', 'featured', 
+                'Premium', 'premium', 
+                'Featured Premium', 'featured_premium', 'featured premium'
+            ])
             ->orderBy('created_at', 'desc')
             ->get();
 
         // 3. Pengurutan (Sorting) Katalog Utama
-        // Menambahkan penanganan huruf kecil/besar di CASE statement ORDER BY
+        // Menuliskan variasi string secara eksplisit pada CASE statement 
+        // agar tidak bergantung pada fungsi LOWER() database yang rawan tidak didukung SQLite Linux.
         $listings = $query->orderByRaw("
-            CASE LOWER(ad_type) 
+            CASE ad_type 
+                WHEN 'Featured' THEN 1 
                 WHEN 'featured' THEN 1 
-                WHEN 'featured premium' THEN 1 
+                WHEN 'Featured Premium' THEN 1 
                 WHEN 'featured_premium' THEN 1 
+                WHEN 'featured premium' THEN 1 
+                WHEN 'Premium' THEN 2 
                 WHEN 'premium' THEN 2 
+                WHEN 'Gratis' THEN 3 
                 WHEN 'gratis' THEN 3 
+                WHEN 'Reguler' THEN 3 
                 WHEN 'reguler' THEN 3 
                 ELSE 4 
             END
