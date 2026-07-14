@@ -46,22 +46,29 @@ class MarketplaceController extends Controller
             return $q->where('legendary_weapon_count', '>', 0);
         });
 
-        // 2. JALUR AMAN: Ambil data khusus untuk section "AKUN LAGI BU" (Featured/Premium)
-        // Dipisah agar tidak bentrok dengan pagination katalog bawah
+        // 2. JALUR AMAN: Mengakomodasi case-sensitive PostgreSQL 
+        // Mencari variasi penulisan 'Featured Premium', 'featured_premium', dsb.
         $featuredListings = Listing::where('status', ListingStatus::ACTIVE)
-            ->whereIn('ad_type', ['Featured', 'Premium', 'Featured Premium'])
+            ->where(function($q) {
+                $q->whereIn('ad_type', [
+                    'Featured', 'featured', 
+                    'Premium', 'premium', 
+                    'Featured Premium', 'featured_premium', 'featured premium'
+                ]);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
         // 3. Pengurutan (Sorting) Katalog Utama
-        // Sudah ditambahkan 'Featured Premium' dan 'Reguler' agar bobot urutan presisi
+        // Menambahkan penanganan huruf kecil/besar di CASE statement ORDER BY
         $listings = $query->orderByRaw("
-            CASE ad_type 
-                WHEN 'Featured' THEN 1 
-                WHEN 'Featured Premium' THEN 1 
-                WHEN 'Premium' THEN 2 
-                WHEN 'Gratis' THEN 3 
-                WHEN 'Reguler' THEN 3 
+            CASE LOWER(ad_type) 
+                WHEN 'featured' THEN 1 
+                WHEN 'featured premium' THEN 1 
+                WHEN 'featured_premium' THEN 1 
+                WHEN 'premium' THEN 2 
+                WHEN 'gratis' THEN 3 
+                WHEN 'reguler' THEN 3 
                 ELSE 4 
             END
         ")
