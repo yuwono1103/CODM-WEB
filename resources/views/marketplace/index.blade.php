@@ -6,9 +6,9 @@
 <div class="container-fluid px-xl-5">
     
     @php
-        // Pisahkan data Featured dan Reguler
-        $featuredAccounts = $listings->filter(fn($l) => $l->featured_until && $l->featured_until->isFuture());
-        $regularAccounts = $listings->reject(fn($l) => $l->featured_until && $l->featured_until->isFuture());
+        // Menggunakan data yang sudah dilempar dari MarketplaceController
+        $featuredAccounts = $featuredListings ?? collect();
+        $regularAccounts = $listings;
     @endphp
 
     <div class="text-center mb-4">
@@ -121,14 +121,13 @@
                         
                         <div class="mb-4">
                             <label class="form-label text-muted small fw-bold">Pencarian Keyword</label>
-                            <input type="text" name="search" class="form-control form-control-dark mb-2" placeholder="Judul iklan..." value="{{ request('search') }}">
-                            <input type="text" name="ign" class="form-control form-control-dark" placeholder="IGN In-game..." value="{{ request('ign') }}">
+                            <input type="text" name="search" class="form-control form-control-dark" placeholder="Cari judul iklan..." value="{{ request('search') }}">
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label text-muted small fw-bold">Rentang Harga (Rp)</label>
-                            <input type="number" name="min_price" class="form-control form-control-dark mb-2" placeholder="Min. Harga" value="{{ request('min_price') }}">
-                            <input type="number" name="max_price" class="form-control form-control-dark" placeholder="Max. Harga" value="{{ request('max_price') }}">
+                            <input type="number" name="price_min" class="form-control form-control-dark mb-2" placeholder="Min. Harga" value="{{ request('price_min') }}">
+                            <input type="number" name="price_max" class="form-control form-control-dark" placeholder="Max. Harga" value="{{ request('price_max') }}">
                         </div>
 
                         <div class="mb-4">
@@ -140,42 +139,6 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="login_type[]" value="Facebook" id="loginFb" {{ is_array(request('login_type')) && in_array('Facebook', request('login_type')) ? 'checked' : '' }}>
                                 <label class="form-check-label text-white small" for="loginFb">Facebook</label>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label text-muted small fw-bold">Atribut Akun</label>
-                            <div class="form-check mb-1">
-                                <input class="form-check-input" type="checkbox" name="border_s1" value="1" id="filterS1" {{ request('border_s1') ? 'checked' : '' }}>
-                                <label class="form-check-label text-white small" for="filterS1">Border S1 Asli</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="damascus" value="1" id="filterDamascus" {{ request('damascus') ? 'checked' : '' }}>
-                                <label class="form-check-label text-white small" for="filterDamascus">Camo Damascus</label>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label text-muted small fw-bold">Koleksi Minimum</label>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <input type="number" name="min_mythic_wp" class="form-control form-control-dark form-control-sm" placeholder="Mythic Wp" title="Minimum Mythic Weapon" value="{{ request('min_mythic_wp') }}">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" name="min_legend_wp" class="form-control form-control-dark form-control-sm" placeholder="Legend Wp" title="Minimum Legendary Weapon" value="{{ request('min_legend_wp') }}">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" name="min_prestige" class="form-control form-control-dark form-control-sm" placeholder="Prestige" title="Minimum Prestige Weapon" value="{{ request('min_prestige') }}">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" name="min_mythic_ch" class="form-control form-control-dark form-control-sm" placeholder="Mythic Ch" title="Minimum Mythic Character" value="{{ request('min_mythic_ch') }}">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" name="min_legend_ch" class="form-control form-control-dark form-control-sm" placeholder="Legend Ch" title="Minimum Legendary Character" value="{{ request('min_legend_ch') }}">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" name="min_vehicle" class="form-control form-control-dark form-control-sm" placeholder="Vehicle" title="Minimum Legendary Vehicle" value="{{ request('min_vehicle') }}">
-                                </div>
                             </div>
                         </div>
 

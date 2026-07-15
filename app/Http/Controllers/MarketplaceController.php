@@ -15,17 +15,12 @@ class MarketplaceController extends Controller
         // 1. Ambil semua iklan yang statusnya ACTIVE
         $query = Listing::where('status', ListingStatus::ACTIVE);
 
-        // Fitur Pencarian Dinamis (Berdasarkan Judul atau List Item Koleksi)
+        // 2. Fitur Pencarian Dinamis (Sekarang HANYA berdasarkan Judul Iklan)
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('mythic_weapon_list', 'like', "%{$search}%")
-                  ->orWhere('legendary_weapon_list', 'like', "%{$search}%");
-            });
+            $query->where('title', 'like', "%{$request->search}%");
         }
 
-        // Fitur Filter Spesifikasi Akun Terintegrasi
+        // 3. Fitur Filter Spesifikasi Dasar (Koleksi dihilangkan)
         $query->when($request->filled('price_min'), function ($q) use ($request) {
             return $q->where('price', '>=', $request->price_min);
         })->when($request->filled('price_max'), function ($q) use ($request) {
@@ -36,33 +31,22 @@ class MarketplaceController extends Controller
             return $q->where('rank_mp', $request->rank_mp);
         })->when($request->filled('rank_br'), function ($q) use ($request) {
             return $q->where('rank_br', $request->rank_br);
-        })->when($request->filled('border_s1'), function ($q) {
-            return $q->where('border_s1', true);
-        })->when($request->filled('damascus'), function ($q) {
-            return $q->where('damascus', true);
-        })->when($request->filled('mythic_only'), function ($q) {
-            return $q->where('mythic_weapon_count', '>', 0);
-        })->when($request->filled('legendary_only'), function ($q) {
-            return $q->where('legendary_weapon_count', '>', 0);
         });
 
-        // 2. JALUR BARU: Mengambil Featured berdasarkan sistem terbaru & toleransi data lama localhost
+        // 4. JALUR BARU: Mengambil Featured
         $now = now()->toDateTimeString();
         $featuredListings = Listing::where('status', ListingStatus::ACTIVE)
             ->where(function($q) use ($now) {
                 $q->where(function($sub) use ($now) {
-                    // Sistem Baru: Status approved dan belum kadaluarsa
                     $sub->where('featured_status', 'approved')
                         ->where('featured_until', '>=', $now);
                 })
-                // Fallback Sistem Lama (Agar di localhost kamu tetap muncul jika di-set manual)
                 ->orWhereIn('ad_type', ['Featured', 'featured', 'Premium', 'premium', 'Featured Premium']);
             })
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // 3. Pengurutan (Sorting) Katalog Utama
-        // Menempatkan iklan yang berstatus Featured Aktif atau tipe Premium di urutan paling atas (1)
+        // 5. Pengurutan (Sorting) Katalog Utama
         $listings = $query->orderByRaw("
             CASE 
                 WHEN featured_status = 'approved' AND featured_until >= '{$now}' THEN 1
@@ -73,7 +57,6 @@ class MarketplaceController extends Controller
         ->orderBy('created_at', 'desc')
         ->paginate(12);
 
-        // Mengirimkan kedua variabel ke view utama
         return view('marketplace.index', compact('listings', 'featuredListings'));
     }
 

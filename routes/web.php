@@ -2,10 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MarketplaceController;
-use App\Http\Controllers\EscrowController; // <-- TAMBAHAN IMPORT ESCROW CONTROLLER
+use App\Http\Controllers\EscrowController;
 use App\Http\Controllers\Seller\DashboardController as SellerDashboard;
 use App\Http\Controllers\Seller\ListingController as SellerListing;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
+use App\Http\Controllers\Admin\SettingController; // <-- Bisa di-import juga di atas biar rapi bawahnya
 
 // ==================== RUTE PUBLIK (GUEST) ====================
 Route::get('/', [MarketplaceController::class, 'index'])->name('marketplace.index');
@@ -54,10 +55,13 @@ Route::middleware(['auth'])->group(function () {
         
         // Dashboard & Moderasi Konten
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
+        
+        // --- ROUTE SETTINGS BARU ---
+        Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 
         // Manajemen Semua Listing
         Route::get('/listings', [AdminDashboard::class, 'allListings'])->name('listings.index');
-
         Route::post('/listings/{id}/approve', [AdminDashboard::class, 'approve'])->name('listings.approve');
         Route::post('/listings/{id}/reject', [AdminDashboard::class, 'reject'])->name('listings.reject');
         Route::post('/listings/{id}/approve-featured', [AdminDashboard::class, 'approveFeatured'])->name('listings.approve_featured');
@@ -74,7 +78,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/dashboard/escrow/{id}/group-created', [AdminDashboard::class, 'markGroupCreated'])->name('escrow.group_created');
         Route::post('/dashboard/escrow/{id}/complete', [AdminDashboard::class, 'completeEscrow'])->name('escrow.complete');
 
-        // ROUTE BARU UNTUK HALAMAN RIWAYAT REKBER (Disambung ke EscrowController)
+        // ROUTE BARU UNTUK HALAMAN RIWAYAT REKBER
         Route::get('/escrow/history', [EscrowController::class, 'history'])->name('admin.escrow.history');
         Route::get('/escrow/history/{id}', [EscrowController::class, 'show'])->name('admin.escrow.show');
     });

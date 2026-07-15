@@ -69,7 +69,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold text-uppercase">Level Akun *</label>
-                        <input type="number" name="level" class="form-control form-control-dark" placeholder="Max 350" value="{{ old('level') }}" required>
+                        <input type="number" name="level" class="form-control form-control-dark" placeholder="Max 400" value="{{ old('level') }}" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold text-uppercase">Rank MP *</label>
