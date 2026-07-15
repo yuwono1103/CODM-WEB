@@ -428,15 +428,24 @@
                                 
                                 <div class="mb-2 p-2 rounded border border-secondary bg-black d-flex justify-content-between align-items-center">
                                     <div>
-                                        <span class="d-block small text-muted" style="font-size: 0.7rem;">BCA (a.n Admin CODM)</span>
-                                        <strong class="text-white font-monospace">1234-5678-90</strong>
+                                        <span class="d-block small text-muted" style="font-size: 0.7rem;">
+                                            {{ $siteSettings['bank_name'] ?? 'BCA' }} (a.n {{ $siteSettings['account_name'] ?? 'Admin CODM' }})
+                                        </span>
+                                        
+                                        <strong class="text-white font-monospace">
+                                            {{ $siteSettings['bank_account'] ?? '1234-5678-90' }}
+                                        </strong>
                                     </div>
                                     <i class="bi bi-bank text-muted fs-4"></i>
                                 </div>
+
                                 <div class="mb-4 p-2 rounded border border-secondary bg-black d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="d-block small text-muted" style="font-size: 0.7rem;">DANA / GOPAY</span>
-                                        <strong class="text-white font-monospace">0812-3456-7890</strong>
+                                        
+                                        <strong class="text-white font-monospace">
+                                            {{ $siteSettings['admin_wa'] ?? '0812-3456-7890' }}
+                                        </strong>
                                     </div>
                                     <i class="bi bi-phone text-muted fs-4"></i>
                                 </div>

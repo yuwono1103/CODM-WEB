@@ -384,7 +384,7 @@
             Butuh bantuan?<br>
             <strong class="text-success" style="letter-spacing: 0.5px;">Hubungi Admin</strong>
         </div>
-        <a href="https://wa.me/6281234567890?text=Halo%20Admin%20Marketplace%20CODM,%20saya%20butuh%20bantuan%20terkait..." target="_blank" class="wa-button d-flex align-items-center justify-content-center shadow-lg" style="width: 55px; height: 55px; background-color: #25D366; color: white; border-radius: 50%; text-decoration: none; font-size: 1.8rem; transition: transform 0.2s ease;">
+        <a href="https://wa.me/{{ $siteSettings['admin_wa'] ?? '6281234567890' }}?text=Halo%20Admin%20Marketplace%20CODM,%20saya%20butuh%20bantuan%20terkait..." target="_blank" class="wa-button d-flex align-items-center justify-content-center shadow-lg" style="width: 55px; height: 55px; background-color: #25D366; color: white; border-radius: 50%; text-decoration: none; font-size: 1.8rem; transition: transform 0.2s ease;">
             <i class="bi bi-whatsapp"></i>
         </a>
     </div>

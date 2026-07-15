@@ -15,23 +15,31 @@ class MarketplaceController extends Controller
         // 1. Ambil semua iklan yang statusnya ACTIVE
         $query = Listing::where('status', ListingStatus::ACTIVE);
 
-        // 2. Fitur Pencarian Dinamis (Sekarang HANYA berdasarkan Judul Iklan)
+        // 2. Fitur Pencarian Dinamis (Berdasarkan Judul)
         if ($request->filled('search')) {
             $query->where('title', 'like', "%{$request->search}%");
         }
 
-        // 3. Fitur Filter Spesifikasi Dasar (Koleksi dihilangkan)
+        // 3. Fitur Filter Spesifikasi Dasar
         $query->when($request->filled('price_min'), function ($q) use ($request) {
-            return $q->where('price', '>=', $request->price_min);
+            $q->where('price', '>=', $request->price_min);
         })->when($request->filled('price_max'), function ($q) use ($request) {
-            return $q->where('price', '<=', $request->price_max);
+            $q->where('price', '<=', $request->price_max);
         })->when($request->filled('level'), function ($q) use ($request) {
-            return $q->where('level', '>=', $request->level);
+            $q->where('level', '>=', $request->level);
         })->when($request->filled('rank_mp'), function ($q) use ($request) {
-            return $q->where('rank_mp', $request->rank_mp);
+            $q->where('rank_mp', $request->rank_mp);
         })->when($request->filled('rank_br'), function ($q) use ($request) {
-            return $q->where('rank_br', $request->rank_br);
+            $q->where('rank_br', $request->rank_br);
         });
+
+        // --- TAMBAHAN BARU: Menangkap Filter Tipe Login (Checkbox) ---
+        if ($request->filled('login_type') && is_array($request->login_type)) {
+            // Catatan: Pastikan nama kolom di database kamu benar. 
+            // Jika nama kolom tipe login di tabel listings adalah 'login', pakai ini:
+            $query->whereIn('login', $request->login_type); 
+            // (Ubah 'login' jadi 'login_type' jika nama kolom di databasemu begitu)
+        }
 
         // 4. JALUR BARU: Mengambil Featured
         $now = now()->toDateTimeString();
@@ -47,18 +55,36 @@ class MarketplaceController extends Controller
             ->get();
 
         // 5. Pengurutan (Sorting) Katalog Utama
-        $listings = $query->orderByRaw("
-            CASE 
-                WHEN featured_status = 'approved' AND featured_until >= '{$now}' THEN 1
-                WHEN ad_type IN ('Featured', 'featured', 'Premium', 'premium', 'Featured Premium') THEN 1
-                ELSE 2 
-            END
-        ")
-        ->orderBy('created_at', 'desc')
-        ->paginate(12);
+        if ($request->filled('sort') && $request->sort !== 'newest') {
+            // Jika user memilih filter spesifik, ABAIKAN prioritas Featured 
+            // agar urutan 100% akurat berdasarkan pilihan user
+            if ($request->sort === 'price_asc') {
+                $query->orderBy('price', 'asc'); // Harga Termurah
+            } elseif ($request->sort === 'price_desc') {
+                $query->orderBy('price', 'desc'); // Harga Termahal
+            } elseif ($request->sort === 'views') {
+                $query->orderBy('view_count', 'desc'); // View Terbanyak
+            } elseif ($request->sort === 'oldest') {
+                $query->orderBy('created_at', 'asc'); // Terlama
+            }
+        } else {
+            // Default jika user tidak memilih filter ATAU memilih "Terbaru":
+            // Tetap prioritaskan akun Featured di atas, lalu urutkan dari yang terbaru
+            $query->orderByRaw("
+                CASE 
+                    WHEN featured_status = 'approved' AND featured_until >= '{$now}' THEN 1
+                    WHEN ad_type IN ('Featured', 'featured', 'Premium', 'premium', 'Featured Premium') THEN 1
+                    ELSE 2 
+                END
+            ")->orderBy('created_at', 'desc'); 
+        }
+
+        // Langkah C: --- TAMBAHAN BARU: withQueryString() ---
+        // Ini WAJIB agar filter tidak reset saat user pindah ke Page 2, Page 3, dst.
+        $listings = $query->paginate(12)->withQueryString();
 
         return view('marketplace.index', compact('listings', 'featuredListings'));
-    }
+    } // <--- INI YANG TADI KELUPAAN (Tutup fungsi index)
 
     public function show($slug)
     {

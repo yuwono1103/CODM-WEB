@@ -10,12 +10,22 @@
     <nav class="navbar navbar-dark bg-danger shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{{ route('admin.dashboard') }}">CODM ADMIN PANEL</a>
-            <div class="d-flex">
-                <a href="{{ route('marketplace.index') }}" class="btn btn-sm btn-outline-light me-2">Lihat Website</a>
-                <form method="POST" action="{{ route('logout') }}">
+            
+            <div class="d-flex align-items-center">
+                
+                <a href="{{ url('/admin/settings') }}" class="btn btn-sm btn-warning fw-bold text-dark me-2">
+                    ⚙️ Pengaturan
+                </a>
+
+                <a href="{{ route('marketplace.index') }}" class="btn btn-sm btn-outline-light me-2">
+                    Lihat Website
+                </a>
+                
+                <form method="POST" action="{{ route('logout') }}" class="m-0">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-dark">Logout</button>
                 </form>
+                
             </div>
         </div>
     </nav>
